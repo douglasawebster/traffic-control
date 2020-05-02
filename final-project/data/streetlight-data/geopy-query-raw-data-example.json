@@ -1,0 +1,23 @@
+{
+    "display_name": "8593, La Jolla Shores Drive, La Jolla Farms, Torrey Pines, San Diego, San Diego County, California, 92037, United States of America", 
+    "place_id": 5212231, 
+    "lon": -117.2525, 
+    "boundingbox": [32.86358, 32.86378, -117.2526, -117.2524], 
+    "osm_type": "node", 
+    "licence": "Data \xa9 OpenStreetMap contributors", 
+    "ODbL 1.0. https": "//osm.org/copyright", 
+    "osm_id": 596382713, 
+    "lat": "32.86368", 
+    "address": {
+        "city": "San Diego", 
+        "house_number": 8593, 
+        "country": "United States of America", 
+        "county": "San Diego County", 
+        "suburb": "Torrey Pines", 
+        "state": "California", 
+        "road": "La Jolla Shores Drive", 
+        "country_code": "us", 
+        "neighbourhood": "La Jolla Farms", 
+        "postcode": "92037"
+    }
+}

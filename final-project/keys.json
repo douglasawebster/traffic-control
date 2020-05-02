@@ -1,0 +1,5 @@
+{
+    "flespi" : "Y96r1ePUKsRT4X96sn6fi20shyFjr7Ed7AvWCaHdrmWl9Tgp6auc2iv9H0gWVI0S",
+    "tomtom" : "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point= LATITUDE %2C LONGITUDE &unit=MPH&key=ectK44V5Myjiu5gaD4qKltXSc36fGO8W",
+    "mapbox" : "pk.eyJ1IjoiZG91Z2xhc2F3ZWJzdGVyIiwiYSI6ImNrOWh6MW12NjExbWszZGxjeW81Y253aGsifQ.j3cIpkuNKUgMesBDpd7M3w"
+}
