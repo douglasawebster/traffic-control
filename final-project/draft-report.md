@@ -43,8 +43,44 @@ Using a database provided by the City of San Diego I was able to find all of the
 
 `streetlight-json.json`: JSON database of all streetlights in La Jolla.  The key is the unique streetlight identification number and the value is the associated data with the streetlight
 
-`geopy-query-raw-data-example.json`: an example result from querying geopy library
+```JSON
+"SS-027731-001": {
+    "description": "VIA DON BENITO E/O VIA ESTRADA 410'",
+    "wattage": "85.0",
+    "longitude": "-117.25316374",
+    "voltage": "120.0",
+    "latitude": "32.8350609",
+    "model": "COBRA",
+    "type": "IND",
+    "road": "Via Don Benito"
+}
+```
 
+`geopy-query-raw-data-example.json`: an example result from querying the geopy library
+
+```JSON
+"display_name": "8593, La Jolla Shores Drive, La Jolla Farms, Torrey Pines, San Diego, San Diego County, California, 92037, United States of America", 
+"place_id": 5212231, 
+"lon": -117.2525, 
+"boundingbox": [32.86358, 32.86378, -117.2526, -117.2524], 
+"osm_type": "node", 
+"licence": "Data \xa9 OpenStreetMap contributors", 
+"ODbL 1.0. https": "//osm.org/copyright", 
+"osm_id": 596382713, 
+"lat": "32.86368", 
+"address": {
+    "city": "San Diego", 
+    "house_number": 8593, 
+    "country": "United States of America", 
+    "county": "San Diego County", 
+    "suburb": "Torrey Pines", 
+    "state": "California", 
+    "road": "La Jolla Shores Drive", 
+    "country_code": "us", 
+    "neighbourhood": "La Jolla Farms", 
+    "postcode": "92037"
+}
+```
 Using an online [mapping software](http://www.copypastemap.com/) I was able to plot all of the coordinates of the streetlights in La Jolla.
 
 ![Alt Text](img/la-jolla-streetlights.png)
@@ -63,12 +99,39 @@ Ultrasonic sensors calculate the distance between two objects based on the elaps
 
 Acoustic array sensors are formed by a set of microphones that are used to detect an increase in sound energy produced by an approaching vehicle.  These sensors are used to calculate traffic volume, vehicle occupancy, and average speed of vehicles.
 
-Given this information I have chosen to use radar and infrared sensors.  Together these sensor are capable of meeting all of the required capabilities, speed detection, vehicle density, lane detection, and vehicle classification.  The radar sensors will be used for tracking vehicle speed and determining the number of vehicles in each lane.  The appeal of radar sensors is the ability to easily install these sensors along with support for multiple detection zones and the ability operate at day or night.  To fulfill the remaining data collection requirements active infrared sensors will be used because they can measure flow volume and classify vehicles.         
-
+Given this information I have chosen to use radar and infrared sensors.  Together these sensor are capable of meeting all of the required capabilities, speed detection, vehicle density, lane detection, and vehicle classification.  The radar sensors will be used for tracking vehicle speed and determining the number of vehicles in each lane.  The appeal of radar sensors is the ability to easily install these sensors along with support for multiple detection zones and the ability operate at day or night.  To fulfill the remaining data collection requirements active infrared sensors will be used because they can measure flow volume and classify vehicles.  Below are diagrams showing the data the streetlight sensors will be collecting.  The first two diagrams show the radar sensors detecting vehicle speed and vehicle lane information.  The remaining two diagrams show the infrared sensors collecting vehicle density and vehicle classification information.
 
 <img src="img/vehicle-speed.png" width="425"/> <img src="img/vehicle-lane.png" width="425"/> 
 
 <img src="img/vehicle-density.png" width="425"/> <img src="img/vehicle-classification.png" width="425"/>
+
+Using these sensors, data will be recorded every five seconds to provide live traffic flow information.  Now that we have a mechanism for recording data we must find a way to communicate this data to the server making the traffic control decisions.  For this system I will be using wireless communication and the MQTT message protocol which will run over UDP.  I will be using wireless communication because its installation cost is less expensive and less intrusive.  Additionally, I will be using MQTT because it features lightweight overhead allowing for efficient information distribution at relatively high data rates (update rates in the seconds) as well as scalability.
+
+The two sensors on the streetlights will collect data and combine their findings into a single message containing a string topic and a JSON message payload.  The topic and message payload are defined in the following way. 
+
+```JSON
+topic: COUNTRY-ID/STATE-ID/COUNTY-ID/CITY-ID/COMMUNITY-ID/STREETLIGHT-ID
+
+payload: {"currentSpeed": 45,       // The current speed of traffic        
+
+          "freeFlowSpeed": 45,      // The free flow speed expected under ideal conditions
+
+          "currentTravelTime": 38,  // Current travel time in seconds based on combining real-time measurements between the defined locations in the specified direction.
+
+          "freeFlowTravelTime": 38, // The travel time in seconds which would be expected under ideal free flow conditions
+
+          "vehicleDensity": 15,     // The number of vehicles passing the streetlight
+
+          "vehicleClassification": ["sedan", "suv", "semi"], // A list of vehicle types passing the streetlight
+
+          "laneDensity": [5, 3, 7],  // The number of vehicles in each lane passing the streetlight
+
+          "roadClosure": false,     // true=>road closed, false=>road open
+
+          "confidence": 0.97,       // Confidence based on number of data points
+
+          "timeStamp": "10:22:21",  /* The time the data was sent*/ }
+```
 
  
 
