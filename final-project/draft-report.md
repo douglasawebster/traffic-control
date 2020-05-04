@@ -105,21 +105,16 @@ Given this information I have chosen to use radar and infrared sensors.  Togethe
 
 <img src="img/vehicle-density.png" width="425"/> <img src="img/vehicle-classification.png" width="425"/>
 
-Using these sensors, data will be recorded every five seconds to provide live traffic flow information.  Now that we have a mechanism for recording data we must find a way to communicate this data to the server making the traffic control decisions.  For this system I will be using wireless communication and the MQTT message protocol which will run over UDP.  I will be using wireless communication because its installation cost is less expensive and less intrusive.  Additionally, I will be using MQTT because it features lightweight overhead allowing for efficient information distribution at relatively high data rates (update rates in the seconds) as well as scalability.
+Using these sensors, data will be recorded every five seconds to provide live traffic flow information.  Now that we have a mechanism for recording data we must find a way to communicate this data to the server making the traffic control decisions.  For this system I will be using wireless communication and the MQTT message protocol.  I will be using wireless communication because its installation cost is less expensive and less intrusive.  Additionally, I will be using MQTT because it features lightweight overhead allowing for efficient information distribution at relatively high data rates (update rates in the seconds) as well as scalability.
 
 The two sensors on the streetlights will collect data and combine their findings into a single message containing a string topic and a JSON message payload.  The topic and message payload are defined in the following way. 
 
 ```JSON
+Publisher
+
 topic: COUNTRY-ID/STATE-ID/COUNTY-ID/CITY-ID/COMMUNITY-ID/STREETLIGHT-ID
 
 payload: {"currentSpeed": 45,       // The current speed of traffic        
-
-          "freeFlowSpeed": 45,      // The free flow speed expected under ideal conditions
-
-          "currentTravelTime": 38,  // Current travel time in seconds based on combining real-time measurements between the defined locations in the specified direction.
-
-          "freeFlowTravelTime": 38, // The travel time in seconds which would be expected under ideal free flow conditions
-
           "vehicleDensity": 15,     // The number of vehicles passing the streetlight
 
           "vehicleClassification": ["sedan", "suv", "semi"], // A list of vehicle types passing the streetlight
@@ -130,12 +125,40 @@ payload: {"currentSpeed": 45,       // The current speed of traffic
 
           "confidence": 0.97,       // Confidence based on number of data points
 
-          "timeStamp": "10:22:21",  /* The time the data was sent*/ }
+          "timeStamp": "10:22:21",  // The time the data was sent }
 ```
 
+The MQTT message containing the above data will be sent by the publisher (the streetlight) to the message broker (Flespi) and then the subscriber (the server) will retrieve the messages from the message broker.  Once the data has been retrieved by the server we need to make traffic flow decisions.  However, the data in the message payload itself is not sufficient to make informed decisions.  We will also need to store some historical data on the server to understand current traffic flow conditions.  For example, it is not enough to simply know the current speed of the vehicles on a road.  We must also know how this speed relates to the average speed on the road over time.  Thus, the server will also store the following data: a historical average and time of day average.  The historical average will keep track of the all time average speed, average vehicle density, and average lane density.  The time of day average will keep track of the same information but for a given time period within a day, for example averages between 5pm and 6pm.  This data will be stored in the JSON format seen below 
+
+```JSON
+historical: {  "averageSpeed": 50,                  // The all time average speed
+            
+                "averageVehicleDenisty": 12,        // The all time average vehicle density
+
+                "averageLaneDensity": [4, 2, 6] }   // The all time average lane denisty 
+
+time: { 
+        "1:00": { 
+            "averageSpeed": 52,                     // The average speed at 1:00AM
+            "averageVehicleDensity": 9,             // The average vehicle denisty at 1:00AM
+            "averageLaneDensity": [3, 2, 4]         // The average lane density at 1:00AM
+        },
+
+        "2:00": {                                   // Data for 2:00AM
+            ".........."
+        },
+
+        "....................",                     // Data for 3:00AM-23:00PM
+
+        "24:00": {                                  // Data for 24:00AM
+            ".........."
+        }
+}
+```
  
+I will now quickly summarize what has been discussed so far and then lead into the next portion of the traffic control system, making local and global traffic optimization.  I began by defining the geographical region that this report focuses on, La Jolla, and included a map of the region.  Next, I walked through how I collected streetlight data from the City of San Diego website and how the data was narrowed down to streetlights in La Jolla.  Once I had this information I wrote all of the streetlight data to a JSON and provided a map depicting all streetlights in La Jolla.  Then, I explained what data needed to be collected - vehicle speed, vehicle density, vehicle lane density, and vehicle classification - and the sensors that would be used to collect this data, radar and infrared sensors.  Lastly, I explained how the data would be transferred to the server using a wireless connection and the MQTT message protocol.  Below is a graphic representation of state of the system up to this point. 
 
-
+![Alt Text](img/current-state-flow.png)
 
 
 
