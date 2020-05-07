@@ -1,0 +1,13 @@
+{
+    "name": "node-red-project",
+    "description": "A Node-RED Project",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "node-red-contrib-influxdb": "~0.4.0",
+        "node-red-dashboard": "~2.17.1",
+        "node-red-node-openweathermap": "~0.2.1",
+        "node-red-node-random": "~0.1.4",
+        "node-red-node-serialport": "~0.8.8"
+    }
+}

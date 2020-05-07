@@ -11,10 +11,12 @@ ctr = 1
 for streetlight_id in streetlights:
     streetlight = streetlights[streetlight_id]
 
-    latitude = streetlight['latitude']
-    longitude = streetlight['longitude']
+    if streetlight['road'] == "Torrey Pines Road":
 
-    output_file.write(latitude + "\t" + longitude + "\t" + "dot1" + "\t" + "blue" + "\t" + str(ctr) + "\n")
+        latitude = streetlight['latitude']
+        longitude = streetlight['longitude']
+
+        output_file.write(latitude + "\t" + longitude + "\t" + "dot1" + "\t" + "blue" + "\t" + str(ctr) + "\t" + streetlight_id +"\n")
 
     ctr += 1
 

@@ -38,6 +38,6 @@ mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
 
 mqttc.connect("mqtt.flespi.io", 1883, 60)  # Connecting to flespi
-mqttc.subscribe("po181u/#", 1)  # Subscribing to messages with topic = po181u
+mqttc.subscribe("united-states/california/san-diego-county/san-diego/la-jolla/#", 1)  # Subscribing to messages with topic = united-states/california/san-diego-county/san-diego/la-jolla/
 
 mqttc.loop_forever()

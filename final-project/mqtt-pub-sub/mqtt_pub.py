@@ -43,6 +43,7 @@ request_url = keys["tomtom"]
 streetlight_data_file = sys.argv[2]
 streetlights = json.load(open(streetlight_data_file, "r"))
 
+ids = ["SX-003870-001", "SX-004007-001", "SX-004119-001", "SS-026689-002", "SX-003972-004", "SX-003891-002", "SX-003875-001", "SX-004075-006", "SX-003934-001", "SX-003880-001"]
 
 mqttc = mqtt.Client()
 mqttc.username_pw_set(username, password=None)
@@ -65,38 +66,36 @@ while 1:
 
     time_stamp = now = datetime.now().strftime("%H:%M:%S")
 
-    ctr = 0
-    for streetlight_id in streetlights:
+    #for streetlight_id in streetlights:
+    for id in ids:
 
-        if ctr < 5:
-            ctr += 1
-            streetlight = streetlights[streetlight_id]
+        #streetlight = streetlights[streetlight_id]
+        streetlight = streetlights[id]
 
+        # if streetlight_id in ids:
+        # Replaces latitude and longitude place holders in url with the streetlights coordinates
+        request_url_with_coords = re.sub('\sLATITUDE\s', str(streetlight['latitude']), request_url)
+        request_url_with_coords = re.sub('\sLONGITUDE\s', str(streetlight['longitude']), request_url_with_coords)
 
-            # Replaces latitude and longitude place holders in url with the streetlights coordinates
-            request_url_with_coords = re.sub('\sLATITUDE\s', str(streetlight['latitude']), request_url)
-            request_url_with_coords = re.sub('\sLONGITUDE\s', str(streetlight['longitude']), request_url_with_coords)
+        # Request traffic data given coordinates
+        traffic_request = requests.get(request_url_with_coords)
+        json_object = traffic_request.json()
 
-            # Request traffic data given coordinates
-            traffic_request = requests.get(request_url_with_coords)
-            json_object = traffic_request.json()
+        data = json_object['flowSegmentData']
+        message_payload = {
+            "currentSpeed": data['currentSpeed'],
+            "freeFlowSpeed": data['freeFlowSpeed'],
+            # "currentTravelTime": data['currentTravelTime'],
+            # "freeFlowTravelTime": data['freeFlowTravelTime'],
+            "roadClosure": data['roadClosure'],
+            # "confidence": data['confidence'],
+            "timeStamp": str(time_stamp)
+        }
 
-            data = json_object['flowSegmentData']
-            message_payload = {
-                "currentSpeed": data['currentSpeed'],
-                "freeFlowSpeed": data['freeFlowSpeed'],
-                "currentTravelTime": data['currentTravelTime'],
-                "freeFlowTravelTime": data['freeFlowTravelTime'],
-                "roadClosure": data['roadClosure'],
-                "confidence": data['confidence'],
-                "timeStamp": str(time_stamp)
-            }
+        topic = "united-states/california/san-diego-county/san-diego/la-jolla/" + id #streetlight_id
 
-            topic = "po181u/final-project/traffic-data/" + streetlight_id
-            print(topic)
-
-            info = mqttc.publish(topic, json.dumps(message_payload) +"\n", qos=1)
+        info = mqttc.publish(topic, json.dumps(message_payload) +"\n", qos=1)
 
     sleep(10)
 
-infot.wait_for_publish()
+info.wait_for_publish()
