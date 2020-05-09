@@ -5,32 +5,24 @@ According to the [National Association of City Transportation Officials](https:/
 
 Not only is waiting at red lights frustrating, it is also harmful to the environment and to our health.  Being stopped at a red light increases travel time.  This increase in travel time results in an increase in emitted pollution.  Also, while at a red light many drivers are surrounded by idling engines creating pollution hot-spots.  A study conducted in the United Kingdom monitored drivers' exposure to air pollutants at various points of a journey.  It was found that traffic intersections produced pollution hot-spots.  With drivers decelerating and stopping at lights, idling for a period of time, and then revving up to move quickly when lights turn green, peak particle concentration was found to be twenty-nine times higher than that during free-flowing traffic conditions.    
 
-As cities continue to become more dense and the number of cars on the street increases, traffic congestion and traffic light waiting times will only become more problematic.  While many of the traffic lights in our cities are able to adapt to changes in demand (i.e. the number of cars currently at a light) they can only adjust to cars which are already at the light.  Thus, they fail to foresee changes in demand that will occur a short period of time into future.  In order to combat these problems I am building a system that gathers current traffic information and then uses the information to make global traffic flow decisions.  Thus, my final project will focus on building an IoT network for traffic control.
+As cities continue to become more dense and the number of cars on the street increases, traffic congestion and traffic light waiting times will only become more problematic.  While many of the traffic lights in our cities are able to adapt to changes in demand (i.e. the number of cars currently at a light) they can only adjust to cars which are already at the light.  Thus, they fail to foresee changes in demand that will occur a short period of time into future.  In order to combat these problems I am building a system that gathers current traffic information that can be used to make global traffic flow decisions.  Thus, my final project will focus on building an IoT information network which can be used for traffic control.
 
 At a high level this project asks two questions.  First, how do we collect the information needed to make global traffic flow decisions?  Second, once the information is gathered how do traffic signals make global traffic flow decisions?  
 
-In order to answer these questions I begin by stating the goals and reviewing the terminology that will be used throughout the report.  The next section focuses on data collection which includes geographic scale, sensor types and quantities, data transport, data rates, and data storage.  After a thorough discussion on data collection the following section will detail how this information could be used to make global traffic flow decisions.  Once this has been done I will discuss the architecture linking the data collection system and decision making system together.  Lastly, I will review an elementary prototype of this system using various live traffic API's, the MQTT message protocol, traffic optimization algorithms, and data visualizations for human monitoring. 
+In order to answer these questions I begin by stating the goals of my project.  Then, the next section focuses on data collection which includes geographic scale, sensor types and quantities, data transport, data rates, and data storage.  After a thorough discussion on data collection the following section will detail how this information could be used to make global traffic flow decisions.  Once this has been done I will discuss the architecture linking the data collection system and decision making system together.  Lastly, I will review an elementary prototype of this system using various live traffic API's, the MQTT message protocol, and data visualizations for human monitoring. 
 
 ### Goals
 - Compile sufficient information about streetlights which will be used as the backbone of the traffic control system 
 - Determine the sensors necessary to gather live traffic information
-- Define a mode of communication between sensors and server
+- Define a mode of communication between the sensors and server
 - Outline a few possible optimization methods for traffic control using live traffic data from sensors and stored historical data
-
-### Terminology
-- **Streetlight:** A light on the side of the road used to illuminate the road surface (not a traffic light)
-- **Traffic light:** A light at an intersection directing traffic
-- **Current:** The immediate time frame and lasts for ten seconds, thus it refers to the current state of traffic within about five-hundred feet
-- **Future:** The time frame between ten seconds to two minutes after the current time frame which is between five-hundred feet and one mile
-- **Global:** A ___ radius emanating from a traffic control light
-- **Optimum traffic flow:** A function of motor vehicle speed, density, and wait time
 
 ### Geographic Scale
 Traffic control is a broadly scoped project.  To consolidate the implementation of the project I will be focusing on traffic control in La Jolla, California.  The map included below showcases the high-level road structure of La Jolla.  This cross-section covers about three miles horizontally and two miles vertically.  Additionally, special attention will be focused on Torrey Pines Road.  This is because the road handles much of the traffic entering/leaving La Jolla and is known to get congested during rush hour, school drop-off/pickup, and the summer months.
 
 ![Alt text](img/la-jolla-street-map.png)
 
-This geographical working space will be filled with sensors to monitor road activity.  The sensors for the traffic control system will be placed at streetlights.  The use of streetlights for sensors is crucial for this system because they provide the necessary electricity needed to run the sensors during the day an night, removing the need for additional power lines to be installed.  
+This geographical working space will be filled with sensors to monitor road activity.  The sensors for the traffic control system will be placed at streetlights.  The use of streetlights for sensors is crucial for this system because they provide the necessary electricity needed to run the sensors during the day and night, removing the need for additional power lines to be installed.  
 
 Using a database provided by the City of San Diego I was able to find all of the streetlights in La Jolla. The data was stored via csv with the following format `ID, Model, Type, Wattage, Voltage, Longitude, Latitude, Description`.  To determine if the streetlight was in La Jolla it was necessary to do some prescreening because there were over 60,000 entries.  I first pruned the data by picking a rough boarder around La Jolla.  These coordinates were `max_latitude_north = 32.889147`, `min_latitude_south = 32.802140`, `max_longitude_west = -117.289555`, and `min_longitude_east = -117.235660`.  Then I checked to see if the streetlight was within these coordinates.  If it was outside of the range the entry was ignored because it was outside of La Jolla.  However, if the coordinates were within the rough boundary, closer inspection was needed.  To definitively determine if the streetlight was in La Jolla I made use of a python library to query the coordinates.  The returned result from the query contains a postal code field which I used to determine if the streetlight was in La Jolla.  For each streetlight in La Jolla I added it to a JSON with the key field being the streetlights identification number and values being filled with the rest of the data from the csv. The files pertaining to the streetlight locations can be found in the following directory `final-project/data/streetlight-data/`.  Within this directory the following files are present:
 
@@ -100,7 +92,7 @@ Ultrasonic sensors calculate the distance between two objects based on the elaps
 
 Acoustic array sensors are formed by a set of microphones that are used to detect an increase in sound energy produced by an approaching vehicle.  These sensors are used to calculate traffic volume, vehicle occupancy, and average speed of vehicles.
 
-Given this information I have chosen to use radar and infrared sensors.  Together these sensor are capable of meeting all of the required capabilities, speed detection, vehicle density, lane detection, and vehicle classification.  The radar sensors will be used for tracking vehicle speed and determining the number of vehicles in each lane.  The appeal of radar sensors is the ability to easily install these sensors along with support for multiple detection zones and the ability operate at day or night.  To fulfill the remaining data collection requirements active infrared sensors will be used because they can measure flow volume and classify vehicles.  Below are diagrams showing the data the streetlight sensors will be collecting.  The first two diagrams show the radar sensors detecting vehicle speed and vehicle lane information.  The remaining two diagrams show the infrared sensors collecting vehicle density and vehicle classification information.
+Given this information I have chosen to use radar and infrared sensors.  Together these sensor are capable of meeting all of the required capabilities, speed detection, vehicle density, lane detection, and vehicle classification.  The radar sensors will be used for tracking vehicle speed and determining the number of vehicles in each lane.  The appeal of radar sensors is the ability to easily install these sensors along with support for multiple detection zones and the ability operate to at day or night.  To fulfill the remaining data collection requirements active infrared sensors will be used because they can measure flow volume and classify vehicles.  Below are diagrams showing the data the streetlight sensors will be collecting.  The first two diagrams show the radar sensors detecting vehicle speed and vehicle lane information.  The remaining two diagrams show the infrared sensors collecting vehicle density and vehicle classification information.
 
 <img src="img/vehicle-speed.png" width="425"/> <img src="img/vehicle-lane.png" width="425"/> 
 
@@ -168,15 +160,15 @@ When drafting this project I came upon one of the current problems with "smart" 
 
 In order to understand how this system could theoretically support traffic flow optimization decisions it is important to note the information the system has at its disposal, why each piece of information is important, and the optimization criteria.  
 
-As stated earlier the sensors at the streetlights collect data on vehicle speed, vehicle density, lane density, and vehicle classification.  Additionally, historical data is recorded on all of these fields except for vehicle classification.  
+As stated earlier the sensors at the streetlights collect data on vehicle speed, vehicle density, lane density, and vehicle classification.  Additionally, historical data is recorded on all of these fields except for vehicle classification.  This information is important for the following reasons.  
 
 The speed of vehicles is important because it gives a measure of current traffic flow as well as an estimation of how long it will take for a vehicle to travel to a particular traffic signal.  
 
-The number of vehicles is also important because the current flow of traffic is not solely explainable by speed.  For example, at a given time there may only be five cars traveling on a road at thirty miles per hour, but at some later point there maybe one-hundred cars on that road traveling at thirty miles per hour.  If we treated these situations that same intersections will become clogged because while traffic is moving fast it will take longer for the vehicles to pass through the intersection.  Thus, more time needs to be allotted for the vehicles to pass through the intersection.  
+The number of vehicles is also important because the current flow of traffic is not solely explainable by speed.  For example, at a given time there may only be five cars traveling on a road at thirty miles per hour, but at some later point there maybe one-hundred cars on that road traveling at thirty miles per hour.  If we treated these situations that same intersections will become clogged because while traffic is moving fast it will take longer for the vehicles to pass through the intersection.  Thus, more time needs to be allotted for the vehicles to pass through the intersection when there is high vehicle density.  
 
 Additionally, knowing the number of vehicles in each lane can be used to determine how many vehicles are traveling in a certain direction (are most people turning or going straight?).  This will help make decisions about how long to keep lights on for different lanes and how vehicle density will change as vehicles enter/exit a road.  
 
-Lastly, vehicle classification is crucial for optimizing turn lanes and stopped traffic at intersections.  Detecting the type of vehicle is crucial because large vehicles, like semi-truck, take a long time to turn and speed up.  Therefore, if there is a large vehicle in a turn lane or a large vehicle which needs to speed up from a resting state extra time may need to be allotted to allow for a sufficient number of vehicles to cross the intersection.    
+Lastly, vehicle classification is crucial for optimizing turn lanes and stopped traffic at intersections.  Detecting the type of vehicle is crucial because large vehicles, like semi-trucks, take a long time to turn and speed up.  Therefore, if there is a large vehicle in a turn lane or a large vehicle which needs to speed up from a resting state, extra time may need to be allotted to allow for a sufficient number of vehicles to cross the intersection.    
 
 With these factors in mind we can now state the optimization criteria.  The system will be considered optimal when the global average speed is maximized.  When the average global speed is maximized it must be true that vehicles are able to make ample progress towards their destination and vehicle stoppage is limited.  In order to meets this criteria it may be helpful to use max-flow 
 
@@ -186,7 +178,7 @@ A max-flow algorithm will be helpful because we don't want to not allow too many
 
 For the last part of this project I worked on an elementary prototype focusing on data collection and visualization.  The prototype utilizes the streetlight data that was presented earlier in the report as well as a traffic API, the MQTT message protocol, and Node-red.
 
-I choose a small subset of streetlights along Torrey Pines Road from the `streetlight-json.json` file (shown below).  The streetlight identification numbers were then hard coded into the python file that can be found in `mqtt-pub-sub/mqtt_pub.py `.  Using these predetermined identification numbers I queried the `streetlight-json.json` file to obtain the coordinate information.  Once I had extracted the coordinates I made a call to an API provided by `https://developer.tomtom.com`.  This API returns live traffic information given a set of coordinates.  This data was used to simulate the data that the streetlight sensors would be recording.  
+I choose a small subset of streetlights along Torrey Pines Road from the `streetlight-json.json` file (shown below).  The streetlight identification numbers were then hard coded into the python file that can be found in `mqtt-pub-sub/mqtt_pub.py `.  Using these predetermined identification numbers I queried the `streetlight-json.json` file to obtain the coordinate information.  Once I had extracted the coordinates I made a call to an API provided by `https://developer.tomtom.com`.  This API returns live traffic information given a set of coordinates.  This data was used to simulate the data that the streetlight sensors would be recording if this system was to be implemented.  
 
 ![Alt Text](img/mqtt-streetlights.png)
 
@@ -247,9 +239,33 @@ united-states/california/san-diego-county/san-diego/la-jolla/SX-003934-001 1 {"t
 united-states/california/san-diego-county/san-diego/la-jolla/SX-003880-001 1 {"timeStamp": "12:31:09", "freeFlowSpeed": 25, "currentSpeed": 17, "roadClosure": false}
 ```
 
-Now that I had determined that the data collection and publication was working correctly I incorporated node-red.  I created a MQTT subscriber node that listened for all messages with the following topic `united-states/california/san-diego-county/#`.  This subscriber was to be used for all of San Diego County.  
+Now that I had determined that the data collection and publication was working correctly I incorporated node-red.  I created a MQTT subscriber node that listened for all messages with the following topic `united-states/california/san-diego-county/#`.  This subscriber was to be used for all of San Diego County.  Once the subscriber received a message it would be parsed to see if it was from a streetlight in La Jolla.  If so the current speed data was extracted and passed along.  The current speed information would then be passed to the appropriate gauge and graph.  The gauges are used to track the traffic speed along the road and the graph is a way to get a high level view of traffic speed at all streetlights along a given road.  Below is my flow and the dashboard.
 
+Str-to-message function
+```Javascript
+regex = RegExp('united-states/california/san-diego-county/san-diego/la-jolla/*')
 
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5948625/
+if(regex.test(msg.topic)) {
+    let json_obj = JSON.parse(msg.payload);
+    msg.payload = String(json_obj['currentSpeed'])
+    return msg;
+} 
+
+return;
+```
+
+SX-003870-001 function
+```Javascript
+if(msg.topic == "united-states/california/san-diego-county/san-diego/la-jolla/SX-003870-001") {
+    return msg;
+}
+
+return;
+```
+![Alt Text](img/node-red-flow.png)
+
+The speed data along the road is read from left to right.  The first streetlight is in the top left corner and the fifth in the top right corner.  The sixth streetlight is in the bottom left corner and the tenth in the bottom right corner.  This shows the speed at various points along the road in a visual manner.  Lastly the graph shows all of the data in the gauges all in one place for an easy view of the entire road.
+
+![Alt Text](img/node-red-dashboard.png)
 
 
